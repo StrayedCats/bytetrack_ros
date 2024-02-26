@@ -8,7 +8,7 @@ https://user-images.githubusercontent.com/53618876/145365173-29bb3ec1-b088-4ca2-
 * demo video is [MOT16-04](https://motchallenge.net/vis/MOT16-04), using yolox-s model.
 
 ## Requirements
-- ROS2 Foxy
+- ROS2 Foxy+Humble
 - OpenCV
 - Eigen3
 - [bbox_ex_msgs](https://github.com/Ar-Ray-code/bbox_ex_msgs)
