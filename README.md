@@ -31,6 +31,10 @@ git clone --recursive https://github.com/Ar-Ray-code/YOLOX-ROS
 ./YOLOX-ROS/weights/openvino/install.bash yolox_s
 ```
 
+### BUILD
+```
+colcon build --cmake-args -DYOLOX_USE_TENSORRT=ON --packages-select ros_video_player bytetrack_cpp_node bytetrack_cpp bytetrack_viewer yolox_cpp bboxes_ex_msgs yolox_ros_cpp yolox_param --symlink-install
+```
 ### RUN
 ```
 cd ~/ros2_ws
