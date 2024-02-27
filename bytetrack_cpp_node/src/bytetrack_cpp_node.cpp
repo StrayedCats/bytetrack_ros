@@ -4,25 +4,28 @@
 namespace bytetrack_cpp_node{
     using namespace bytetrack_cpp;
 
-    std::vector<Object> BoundingBoxes2Objects(const std::vector<bboxes_ex_msgs::msg::BoundingBox> bboxes)
+    std::vector<Object> Detection2Ds2Objects(const vector<vision_msgs::msg::Detection2D> detections)
     {
         std::vector<Object> objects;
         float scale = 1.0;
-        for(auto bbox: bboxes){
-            Object obj;
-            obj.rect.x = (bbox.xmin) / scale;
-            obj.rect.y = (bbox.ymin) / scale;
-            obj.rect.width = (bbox.xmax - bbox.xmin) / scale;
-            obj.rect.height = (bbox.ymax - bbox.ymin) / scale;
-
-            auto it = std::find(COCO_CLASSES, COCO_CLASSES + 80, bbox.class_id);
-            if (it != COCO_CLASSES + 80){
-                int idx = std::distance(COCO_CLASSES, it);
-                obj.label = idx;
-            }
+        for(auto detect: detections){
             
-            obj.prob = bbox.probability;
-            objects.push_back(obj);
+            for(auto result: detect.results){
+                Object obj;
+                obj.rect.x = (detect.bbox.center.position.x - (detect.bbox.size_x / 2)) / scale;
+                obj.rect.y = (detect.bbox.center.position.y - (detect.bbox.size_y / 2)) / scale;
+                obj.rect.width = (detect.bbox.size_x) / scale;
+                obj.rect.height = (detect.bbox.size_y) / scale;
+
+                auto it = std::find(COCO_CLASSES, COCO_CLASSES + 80, result.hypothesis.class_id);
+                if (it != COCO_CLASSES + 80){
+                    int idx = std::distance(COCO_CLASSES, it);
+                    obj.label = idx;
+                }
+
+                obj.prob = result.hypothesis.score;
+                objects.push_back(obj);
+            }
         }
         return objects;
     }
@@ -55,12 +58,12 @@ namespace bytetrack_cpp_node{
         this->initializeParameter_();
         this->tracker_ = std::make_unique<BYTETracker>(this->video_fps_, this->track_buffer_);
 
-        this->sub_bboxes_ = this->create_subscription<bboxes_ex_msgs::msg::BoundingBoxes>(
+        this->sub_bboxes_ = this->create_subscription<vision_msgs::msg::Detection2DArray>(
                             this->sub_bboxes_topic_name_, 10, 
                             std::bind(&ByteTrackNode::topic_callback_, 
                                       this,
                                       std::placeholders::_1));
-        this->pub_bboxes_ = this->create_publisher<bboxes_ex_msgs::msg::BoundingBoxes>(
+        this->pub_bboxes_ = this->create_publisher<vision_msgs::msg::Detection2DArray>(
             this->pub_bboxes_topic_name_,
             10
         );
@@ -72,17 +75,16 @@ namespace bytetrack_cpp_node{
         this->sub_bboxes_topic_name_ = this->declare_parameter<std::string>("sub_bboxes_topic_name", "yolox/bounding_boxes");
         this->pub_bboxes_topic_name_ = this->declare_parameter<std::string>("pub_bboxes_topic_name", "bytetrack/bounding_boxes");
     }
-    void ByteTrackNode::topic_callback_(const bboxes_ex_msgs::msg::BoundingBoxes::ConstSharedPtr msg)
+    void ByteTrackNode::topic_callback_(const vision_msgs::msg::Detection2DArray::ConstSharedPtr msg)
     {
-        bboxes_ex_msgs::msg::BoundingBoxes bboxes;
-        bboxes.header = msg->header;
-        bboxes.image_header = msg->image_header;
-
-        vector<Object> objects = BoundingBoxes2Objects(msg->bounding_boxes);
+        vision_msgs::msg::Detection2DArray boxes;
+        boxes.header = msg->header;
+    
+        vector<Object> objects = Detecion2Ds2Objects(msg->bounding_boxes);
         vector<STrack> output_stracks = this->tracker_->update(objects);
         RCLCPP_INFO(this->get_logger(), "Detect objects: %d, Output Tracker: %d", objects.size(), output_stracks.size());
-        bboxes.bounding_boxes = STrack2BoundingBoxes(output_stracks);
-        this->pub_bboxes_->publish(bboxes);
+        boxes.bounding_boxes = STrack2BoundingBoxes(output_stracks);
+        this->pub_bboxes_->publish(boxes);
     }
 }
 
