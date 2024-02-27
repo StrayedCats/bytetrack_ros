@@ -9,26 +9,24 @@ namespace bytetrack_cpp_node{
         std::vector<Object> objects;
         float scale = 1.0;
         for(auto detect: detections){
-            for(auto result: detect.results){
-                Object obj;
-                obj.rect.x = (detect.bbox.center.position.x - (detect.bbox.size_x / 2)) / scale;
-                obj.rect.y = (detect.bbox.center.position.y - (detect.bbox.size_y / 2)) / scale;
-                obj.rect.width = (detect.bbox.size_x) / scale;
-                obj.rect.height = (detect.bbox.size_y) / scale;
+            Object obj;
+            obj.rect.x = (detect.bbox.center.position.x - (detect.bbox.size_x / 2)) / scale;
+            obj.rect.y = (detect.bbox.center.position.y - (detect.bbox.size_y / 2)) / scale;
+            obj.rect.width = (detect.bbox.size_x) / scale;
+            obj.rect.height = (detect.bbox.size_y) / scale;
 
-                auto it = std::find(COCO_CLASSES, COCO_CLASSES + 80, result.hypothesis.class_id);
-                if (it != COCO_CLASSES + 80){
-                    int idx = std::distance(COCO_CLASSES, it);
-                    obj.label = idx;
-                }
-
-                obj.prob = result.hypothesis.score;
-                objects.push_back(obj);
+            auto it = std::find(COCO_CLASSES, COCO_CLASSES + 80, detect.results[0].hypothesis.class_id);
+            if (it != COCO_CLASSES + 80){
+                int idx = std::distance(COCO_CLASSES, it);
+                obj.label = idx;
             }
+
+            obj.prob = detect.results[0].hypothesis.score;
+            objects.push_back(obj);
         }
         return objects;
     }
-    std::vector<vision_msgs::msg::Detection2D> STrack2Detection2Ds(const std::vector<STrack> trackers)
+    std::vector<vision_msgs::msg::Detection2D> STrack2Detection2Ds(const std::vector<STrack> trackers, const std::vector<vision_msgs::msg::Detection2D> & ds)
     {
         std::vector<vision_msgs::msg::Detection2D> detections;
         for(int i=0; i<trackers.size(); i++){
@@ -42,6 +40,7 @@ namespace bytetrack_cpp_node{
             vision_msgs::msg::ObjectHypothesisWithPose hypothesis;
             hypothesis.hypothesis.class_id = COCO_CLASSES[trackers[i].label];
             hypothesis.hypothesis.score = trackers[i].score;
+            hypothesis.pose = ds[i].results[0].pose;
 
             detection.results.push_back(hypothesis);
             // bbox.center_dist = 0.0;
@@ -87,7 +86,7 @@ namespace bytetrack_cpp_node{
         vector<Object> objects = Detection2Ds2Objects(msg->detections);
         vector<STrack> output_stracks = this->tracker_->update(objects);
         RCLCPP_INFO(this->get_logger(), "Detect objects: %d, Output Tracker: %d", objects.size(), output_stracks.size());
-        boxes.detections = STrack2Detection2Ds(output_stracks);
+        boxes.detections = STrack2Detection2Ds(output_stracks,msg->detections);
         this->pub_bboxes_->publish(boxes);
     }
 }
