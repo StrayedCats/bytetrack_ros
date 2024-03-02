@@ -10,8 +10,6 @@
 
 #include <rclcpp/rclcpp.hpp>
 #include <vision_msgs/msg/detection2_d_array.hpp>
-#include "bboxes_ex_msgs/msg/bounding_box.hpp"
-#include "bboxes_ex_msgs/msg/bounding_boxes.hpp"
 
 #include "bytetrack_cpp/BYTETracker.h"
 
