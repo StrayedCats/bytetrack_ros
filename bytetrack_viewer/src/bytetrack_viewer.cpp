@@ -27,11 +27,11 @@ namespace bytetrack_viewer{
         int baseLine = 0;
         cv::Size label_size = cv::getTextSize(txt, cv::FONT_HERSHEY_SIMPLEX, 0.6, 1, &baseLine);
         cv::rectangle(frame, 
-                      cv::Rect(cv::Point(bbox_ymin, bbox_xmin - label_size.height), 
+                      cv::Rect(cv::Point(bbox_xmin, bbox_ymin - label_size.height), 
                                cv::Size(label_size.width, label_size.height + baseLine)),
                       color, -1);
         cv::putText(frame, txt,
-                    cv::Point(bbox_ymin, bbox_xmin), 
+                    cv::Point(bbox_xmin, bbox_ymin), 
                     cv::FONT_HERSHEY_SIMPLEX, 0.6, txt_color, 1, cv::LINE_AA);
     }
 
