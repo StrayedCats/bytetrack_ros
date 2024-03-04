@@ -25,6 +25,7 @@ find_package(message_filters REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(bboxes_ex_msgs REQUIRED)
+find_package(vision_msgs REQUIRED)
 
 # add executable
 add_executable(bytetrack_viewer
@@ -39,6 +40,7 @@ ament_target_dependencies(bytetrack_viewer
   cv_bridge
   OpenCV
   bboxes_ex_msgs
+  vision_msgs
 )
 target_include_directories(bytetrack_viewer PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -72,6 +74,7 @@ ament_target_dependencies(bytetrack_viewer_component
   cv_bridge
   OpenCV
   bboxes_ex_msgs
+  vision_msgs
 )
 install(TARGETS bytetrack_viewer_component
   EXPORT export_${PROJECT_NAME}
