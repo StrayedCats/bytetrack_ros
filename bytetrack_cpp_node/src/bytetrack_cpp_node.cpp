@@ -35,7 +35,7 @@ namespace bytetrack_cpp_node{
             detection.bbox.center.position.y = trackers[i].tlbr[0] + trackers[i].tlbr[2] / 2;
             detection.bbox.size_x = trackers[i].tlbr[3] - trackers[i].tlbr[1];
             detection.bbox.size_y = trackers[i].tlbr[2] - trackers[i].tlbr[0];
-            detection.id = trackers[i].track_id;
+            detection.id = std::to_string(trackers[i].track_id);
         
             vision_msgs::msg::ObjectHypothesisWithPose hypothesis;
             hypothesis.hypothesis.class_id = COCO_CLASSES[trackers[i].label];
@@ -75,7 +75,7 @@ namespace bytetrack_cpp_node{
     {
         this->video_fps_ = this->declare_parameter<int>("video_fps", 30);
         this->track_buffer_ = this->declare_parameter<int>("track_buffer", 30);
-        this->sub_bboxes_topic_name_ = this->declare_parameter<std::string>("sub_bboxes_topic_name", "yolox/bounding_boxes");
+        this->sub_bboxes_topic_name_ = this->declare_parameter<std::string>("sub_bboxes_topic_name", "positions");
         this->pub_bboxes_topic_name_ = this->declare_parameter<std::string>("pub_bboxes_topic_name", "bytetrack/bounding_boxes");
     }
     void ByteTrackNode::topic_callback_(const vision_msgs::msg::Detection2DArray::ConstSharedPtr msg)
