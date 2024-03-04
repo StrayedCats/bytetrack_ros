@@ -10,8 +10,8 @@ namespace bytetrack_cpp_node{
         float scale = 1.0;
         for(auto detect: detections){
             Object obj;
-            obj.rect.x = (detect.bbox.center.position.x - (detect.bbox.size_x / 2)) / scale;
-            obj.rect.y = (detect.bbox.center.position.y - (detect.bbox.size_y / 2)) / scale;
+            obj.rect.x = (detect.bbox.center.position.x - (detect.bbox.size_x / 2.)) / scale;
+            obj.rect.y = (detect.bbox.center.position.y - (detect.bbox.size_y / 2.)) / scale;
             obj.rect.width = (detect.bbox.size_x) / scale;
             obj.rect.height = (detect.bbox.size_y) / scale;
 
@@ -31,10 +31,11 @@ namespace bytetrack_cpp_node{
         std::vector<vision_msgs::msg::Detection2D> detections;
         for(int i=0; i<trackers.size(); i++){
             vision_msgs::msg::Detection2D detection;
-            detection.bbox.center.position.y = trackers[i].tlbr[1] + trackers[i].tlbr[3] / 2;
-            detection.bbox.center.position.x = trackers[i].tlbr[0] + trackers[i].tlbr[2] / 2;
             detection.bbox.size_y = trackers[i].tlbr[3] - trackers[i].tlbr[1];
             detection.bbox.size_x = trackers[i].tlbr[2] - trackers[i].tlbr[0];
+
+            detection.bbox.center.position.x = detection.bbox.size_x / 2 + trackers[i].tlbr[0];
+            detection.bbox.center.position.y = detection.bbox.size_y / 2 + trackers[i].tlbr[1];
             detection.id = std::to_string(trackers[i].track_id);
         
             vision_msgs::msg::ObjectHypothesisWithPose hypothesis;

@@ -8,10 +8,10 @@ namespace bytetrack_viewer{
     void drawObject(cv::Mat frame, vision_msgs::msg::Detection2D box){
         // draw bbox
         auto color = getColor(static_cast<int>(std::stoi(box.id)));
-        float bbox_xmin = box.bbox.center.position.x - box.bbox.size_x / 2;
-        float bbox_ymin = box.bbox.center.position.y - box.bbox.size_y / 2;
+        double bbox_xmin = box.bbox.center.position.x - (box.bbox.size_x / 2);
+        double bbox_ymin = box.bbox.center.position.y - (box.bbox.size_y / 2);
         cv::rectangle(frame, 
-                    cv::Rect( bbox_ymin, bbox_xmin, box.bbox.size_x, box.bbox.size_y),
+                    cv::Rect( bbox_xmin, bbox_ymin, box.bbox.size_x, box.bbox.size_y),
                     color, 2);
 
         // draw ID
