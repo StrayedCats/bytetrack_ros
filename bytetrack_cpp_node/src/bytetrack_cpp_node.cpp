@@ -31,10 +31,10 @@ namespace bytetrack_cpp_node{
         std::vector<vision_msgs::msg::Detection2D> detections;
         for(int i=0; i<trackers.size(); i++){
             vision_msgs::msg::Detection2D detection;
-            detection.bbox.center.position.x = trackers[i].tlbr[1] + trackers[i].tlbr[3] / 2;
-            detection.bbox.center.position.y = trackers[i].tlbr[0] + trackers[i].tlbr[2] / 2;
-            detection.bbox.size_x = trackers[i].tlbr[3] - trackers[i].tlbr[1];
-            detection.bbox.size_y = trackers[i].tlbr[2] - trackers[i].tlbr[0];
+            detection.bbox.center.position.y = trackers[i].tlbr[1] + trackers[i].tlbr[3] / 2;
+            detection.bbox.center.position.x = trackers[i].tlbr[0] + trackers[i].tlbr[2] / 2;
+            detection.bbox.size_y = trackers[i].tlbr[3] - trackers[i].tlbr[1];
+            detection.bbox.size_x = trackers[i].tlbr[2] - trackers[i].tlbr[0];
             detection.id = std::to_string(trackers[i].track_id);
         
             vision_msgs::msg::ObjectHypothesisWithPose hypothesis;
