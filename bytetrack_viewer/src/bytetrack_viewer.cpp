@@ -97,6 +97,8 @@ namespace bytetrack_viewer{
         const sensor_msgs::msg::Image::ConstSharedPtr & image_msg,
         const vision_msgs::msg::Detection2DArray::ConstSharedPtr & trackers_msg)
     {
+        RCLCPP_INFO(this->get_logger(), "Received image and bboxes.");
+
         auto img = cv_bridge::toCvCopy(image_msg, "bgr8");
         cv::Mat frame = img->image;
 
