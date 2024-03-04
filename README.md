@@ -15,6 +15,7 @@ https://user-images.githubusercontent.com/53618876/145365173-29bb3ec1-b088-4ca2-
 - [YOLOX-ROS](https://github.com/Ar-Ray-code/YOLOX-ROS)
 - OpenVINO or TensorRT
 - [ros_video_player](https://github.com/fateshelled/ros_video_player)
+- [detector2d](https://github.com/StrayedCats/detector2d)
 
 ## Usage (OpenVINO)
 ### Install
