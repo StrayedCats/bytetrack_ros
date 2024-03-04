@@ -44,6 +44,18 @@ ros2 launch bytetrack_cpp_node bytetrack_openvino.launch.py
 ros2 launch bytetrack_cpp_node bytetrack_openvino.launch.py video_path:={video file path}
 
 ```
+#### with detector2d(yolox_trt)
+```bash 
+# terminal 1
+ros2 launch ros_video_player ros_video_player.launch.py video_path:="your video path" loop:=True
+# terminal 2
+ros2 run bytetrack_cpp_node bytetrack_cpp_node
+# terminal 3
+ros2 run detector2d_node detector2d_node_exec --ros-args -p load_target_plugin:=detector2d_plugins::YoloxTrt  -p yolox_trt_plugin model_path:="your weight path" -p yolox_trt_plugin.imshow_isshow:=false
+# terminal 4
+ros2 run bytetrack_viewer bytetrack_viewer
+```
+
 
 ### ros graph
 ![rosgraph](https://user-images.githubusercontent.com/53618876/145340126-8c5fc081-9238-49f8-bace-de2854e546b7.png)
