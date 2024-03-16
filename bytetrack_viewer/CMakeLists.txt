@@ -24,7 +24,6 @@ find_package(image_transport REQUIRED)
 find_package(message_filters REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
-find_package(bboxes_ex_msgs REQUIRED)
 find_package(vision_msgs REQUIRED)
 
 # add executable
@@ -39,7 +38,6 @@ ament_target_dependencies(bytetrack_viewer
   message_filters
   cv_bridge
   OpenCV
-  bboxes_ex_msgs
   vision_msgs
 )
 target_include_directories(bytetrack_viewer PUBLIC
@@ -73,7 +71,6 @@ ament_target_dependencies(bytetrack_viewer_component
   message_filters
   cv_bridge
   OpenCV
-  bboxes_ex_msgs
   vision_msgs
 )
 install(TARGETS bytetrack_viewer_component
