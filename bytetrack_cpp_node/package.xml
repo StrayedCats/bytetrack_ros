@@ -13,8 +13,8 @@
   <depend>rclcpp_components</depend>
   <depend>image_transport</depend>
   <depend>std_msgs</depend>
-  <depend>bboxes_ex_msgs</depend>
   <depend>bytetrack_cpp</depend>
+  <depend>vision_msgs</depend>  
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

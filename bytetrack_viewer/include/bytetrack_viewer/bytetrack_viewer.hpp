@@ -9,9 +9,7 @@
 #include <message_filters/sync_policies/approximate_time.h>
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
-
-#include "bboxes_ex_msgs/msg/bounding_box.hpp"
-#include "bboxes_ex_msgs/msg/bounding_boxes.hpp"
+#include <vision_msgs/msg/detection2_d_array.hpp>
 
 namespace bytetrack_viewer{
 
@@ -24,15 +22,14 @@ class ByteTrackViewer : public rclcpp::Node
 
     private:
         using Image = sensor_msgs::msg::Image;
-        using BoundingBoxes = bboxes_ex_msgs::msg::BoundingBoxes;
 
         // Subscriptions
         image_transport::SubscriberFilter sub_image_;
-        message_filters::Subscriber<BoundingBoxes> sub_bboxes_;
+        message_filters::Subscriber<vision_msgs::msg::Detection2DArray> sub_bboxes_;
         using SyncPolicy =
-            message_filters::sync_policies::ApproximateTime<Image, BoundingBoxes>;
+            message_filters::sync_policies::ApproximateTime<Image, vision_msgs::msg::Detection2DArray>;
         using ExactSyncPolicy =
-            message_filters::sync_policies::ExactTime<Image, BoundingBoxes>;
+            message_filters::sync_policies::ExactTime<Image, vision_msgs::msg::Detection2DArray>;
         using Synchronizer = message_filters::Synchronizer<SyncPolicy>;
         using ExactSynchronizer = message_filters::Synchronizer<ExactSyncPolicy>;
         std::shared_ptr<Synchronizer> sync_;
@@ -54,6 +51,6 @@ class ByteTrackViewer : public rclcpp::Node
 
         void imageCallback(
             const Image::ConstSharedPtr & image_msg,
-            const BoundingBoxes::ConstSharedPtr & trackers_msg);
+            const vision_msgs::msg::Detection2DArray::ConstSharedPtr & trackers_msg);
 };
 }

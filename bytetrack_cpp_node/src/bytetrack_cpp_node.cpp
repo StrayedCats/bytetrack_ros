@@ -4,45 +4,52 @@
 namespace bytetrack_cpp_node{
     using namespace bytetrack_cpp;
 
-    std::vector<Object> BoundingBoxes2Objects(const std::vector<bboxes_ex_msgs::msg::BoundingBox> bboxes)
+    std::vector<Object> Detection2Ds2Objects(const vector<vision_msgs::msg::Detection2D> detections)
     {
         std::vector<Object> objects;
         float scale = 1.0;
-        for(auto bbox: bboxes){
+        for(auto detect: detections){
             Object obj;
-            obj.rect.x = (bbox.xmin) / scale;
-            obj.rect.y = (bbox.ymin) / scale;
-            obj.rect.width = (bbox.xmax - bbox.xmin) / scale;
-            obj.rect.height = (bbox.ymax - bbox.ymin) / scale;
+            obj.rect.x = (detect.bbox.center.position.x - (detect.bbox.size_x / 2.)) / scale;
+            obj.rect.y = (detect.bbox.center.position.y - (detect.bbox.size_y / 2.)) / scale;
+            obj.rect.width = (detect.bbox.size_x) / scale;
+            obj.rect.height = (detect.bbox.size_y) / scale;
 
-            auto it = std::find(COCO_CLASSES, COCO_CLASSES + 80, bbox.class_id);
+            auto it = std::find(COCO_CLASSES, COCO_CLASSES + 80, detect.results[0].hypothesis.class_id);
             if (it != COCO_CLASSES + 80){
                 int idx = std::distance(COCO_CLASSES, it);
                 obj.label = idx;
             }
-            
-            obj.prob = bbox.probability;
+
+            obj.prob = detect.results[0].hypothesis.score;
             objects.push_back(obj);
         }
         return objects;
     }
-    std::vector<bboxes_ex_msgs::msg::BoundingBox> STrack2BoundingBoxes(const std::vector<STrack> trackers)
+    std::vector<vision_msgs::msg::Detection2D> STrack2Detection2Ds(const std::vector<STrack> trackers, const std::vector<vision_msgs::msg::Detection2D> & ds)
     {
-        std::vector<bboxes_ex_msgs::msg::BoundingBox> bboxes;
+        std::vector<vision_msgs::msg::Detection2D> detections;
         for(int i=0; i<trackers.size(); i++){
-            bboxes_ex_msgs::msg::BoundingBox bbox;
-            bbox.ymin = trackers[i].tlbr[0];
-            bbox.xmin = trackers[i].tlbr[1];
-            bbox.ymax = trackers[i].tlbr[2];
-            bbox.xmax = trackers[i].tlbr[3];
-            bbox.id = trackers[i].track_id;
-            bbox.class_id = COCO_CLASSES[trackers[i].label];
+            vision_msgs::msg::Detection2D detection;
+            detection.bbox.size_y = trackers[i].tlbr[3] - trackers[i].tlbr[1];
+            detection.bbox.size_x = trackers[i].tlbr[2] - trackers[i].tlbr[0];
+
+            detection.bbox.center.position.x = detection.bbox.size_x / 2 + trackers[i].tlbr[0];
+            detection.bbox.center.position.y = detection.bbox.size_y / 2 + trackers[i].tlbr[1];
+            detection.id = std::to_string(trackers[i].track_id);
+        
+            vision_msgs::msg::ObjectHypothesisWithPose hypothesis;
+            hypothesis.hypothesis.class_id = COCO_CLASSES[trackers[i].label];
+            hypothesis.hypothesis.score = trackers[i].score;
+            hypothesis.pose = ds[i].results[0].pose;
+
+            detection.results.push_back(hypothesis);
             // bbox.center_dist = 0.0;
             // bbox.img_height = 0;
             // bbox.img_width = 0;
-            bboxes.push_back(bbox);
+            detections.push_back(detection);
         }
-        return bboxes;
+        return detections;
     }
     
     ByteTrackNode::ByteTrackNode(const std::string &node_name, const rclcpp::NodeOptions& options)
@@ -55,12 +62,12 @@ namespace bytetrack_cpp_node{
         this->initializeParameter_();
         this->tracker_ = std::make_unique<BYTETracker>(this->video_fps_, this->track_buffer_);
 
-        this->sub_bboxes_ = this->create_subscription<bboxes_ex_msgs::msg::BoundingBoxes>(
+        this->sub_bboxes_ = this->create_subscription<vision_msgs::msg::Detection2DArray>(
                             this->sub_bboxes_topic_name_, 10, 
                             std::bind(&ByteTrackNode::topic_callback_, 
                                       this,
                                       std::placeholders::_1));
-        this->pub_bboxes_ = this->create_publisher<bboxes_ex_msgs::msg::BoundingBoxes>(
+        this->pub_bboxes_ = this->create_publisher<vision_msgs::msg::Detection2DArray>(
             this->pub_bboxes_topic_name_,
             10
         );
@@ -69,20 +76,19 @@ namespace bytetrack_cpp_node{
     {
         this->video_fps_ = this->declare_parameter<int>("video_fps", 30);
         this->track_buffer_ = this->declare_parameter<int>("track_buffer", 30);
-        this->sub_bboxes_topic_name_ = this->declare_parameter<std::string>("sub_bboxes_topic_name", "yolox/bounding_boxes");
+        this->sub_bboxes_topic_name_ = this->declare_parameter<std::string>("sub_bboxes_topic_name", "positions");
         this->pub_bboxes_topic_name_ = this->declare_parameter<std::string>("pub_bboxes_topic_name", "bytetrack/bounding_boxes");
     }
-    void ByteTrackNode::topic_callback_(const bboxes_ex_msgs::msg::BoundingBoxes::ConstSharedPtr msg)
+    void ByteTrackNode::topic_callback_(const vision_msgs::msg::Detection2DArray::ConstSharedPtr msg)
     {
-        bboxes_ex_msgs::msg::BoundingBoxes bboxes;
-        bboxes.header = msg->header;
-        bboxes.image_header = msg->image_header;
-
-        vector<Object> objects = BoundingBoxes2Objects(msg->bounding_boxes);
+        vision_msgs::msg::Detection2DArray boxes;
+        boxes.header = msg->header;
+    
+        vector<Object> objects = Detection2Ds2Objects(msg->detections);
         vector<STrack> output_stracks = this->tracker_->update(objects);
         RCLCPP_INFO(this->get_logger(), "Detect objects: %d, Output Tracker: %d", objects.size(), output_stracks.size());
-        bboxes.bounding_boxes = STrack2BoundingBoxes(output_stracks);
-        this->pub_bboxes_->publish(bboxes);
+        boxes.detections = STrack2Detection2Ds(output_stracks,msg->detections);
+        this->pub_bboxes_->publish(boxes);
     }
 }
 

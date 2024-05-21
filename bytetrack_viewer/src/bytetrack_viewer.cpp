@@ -5,12 +5,13 @@ namespace bytetrack_viewer{
         int idx = id + 3;
         return cv::Scalar(37 * idx % 255, 17 * idx % 255, 29 * idx % 255);
     }
-    void drawObject(cv::Mat frame, bboxes_ex_msgs::msg::BoundingBox bbox){
+    void drawObject(cv::Mat frame, vision_msgs::msg::Detection2D box){
         // draw bbox
-        auto color = getColor(bbox.id);
+        auto color = getColor(static_cast<int>(std::stoi(box.id)));
+        double bbox_xmin = box.bbox.center.position.x - (box.bbox.size_x / 2);
+        double bbox_ymin = box.bbox.center.position.y - (box.bbox.size_y / 2);
         cv::rectangle(frame, 
-                    cv::Rect(bbox.ymin, bbox.xmin, 
-                            bbox.ymax - bbox.ymin, bbox.xmax - bbox.xmin),
+                    cv::Rect( bbox_xmin, bbox_ymin, box.bbox.size_x, box.bbox.size_y),
                     color, 2);
 
         // draw ID
@@ -22,15 +23,15 @@ namespace bytetrack_viewer{
             txt_color = cv::Scalar(255, 255, 255);
         }
 
-        std::string txt = cv::format("ID:%d %s", bbox.id, bbox.class_id.c_str());
+        std::string txt = cv::format("ID:%s %s", box.id.c_str(), box.results[0].hypothesis.class_id.c_str());
         int baseLine = 0;
         cv::Size label_size = cv::getTextSize(txt, cv::FONT_HERSHEY_SIMPLEX, 0.6, 1, &baseLine);
         cv::rectangle(frame, 
-                      cv::Rect(cv::Point(bbox.ymin, bbox.xmin - label_size.height), 
+                      cv::Rect(cv::Point(bbox_xmin, bbox_ymin - label_size.height), 
                                cv::Size(label_size.width, label_size.height + baseLine)),
                       color, -1);
         cv::putText(frame, txt,
-                    cv::Point(bbox.ymin, bbox.xmin), 
+                    cv::Point(bbox_xmin, bbox_ymin), 
                     cv::FONT_HERSHEY_SIMPLEX, 0.6, txt_color, 1, cv::LINE_AA);
     }
 
@@ -72,7 +73,7 @@ namespace bytetrack_viewer{
     ByteTrackViewer::~ByteTrackViewer(){
         if(this->video_.isOpened()){
             this->video_.release();
-            RCLCPP_INFO(this->get_logger(), "save as " + this->save_video_name_ + ".");
+            //RCLCPP_INFO(this->get_logger(), "save as " + this->save_video_name_ + ".");
         }
     }
     void ByteTrackViewer::initializeParameter_()
@@ -94,8 +95,10 @@ namespace bytetrack_viewer{
     }
     void ByteTrackViewer::imageCallback(
         const sensor_msgs::msg::Image::ConstSharedPtr & image_msg,
-        const bboxes_ex_msgs::msg::BoundingBoxes::ConstSharedPtr & trackers_msg)
+        const vision_msgs::msg::Detection2DArray::ConstSharedPtr & trackers_msg)
     {
+        RCLCPP_INFO(this->get_logger(), "Received image and bboxes.");
+
         auto img = cv_bridge::toCvCopy(image_msg, "bgr8");
         cv::Mat frame = img->image;
 
@@ -112,7 +115,7 @@ namespace bytetrack_viewer{
                 true);
         }
 
-        auto bboxes = trackers_msg->bounding_boxes;
+        auto bboxes = trackers_msg->detections;
         for(auto bbox: bboxes){
             drawObject(frame, bbox);
         }

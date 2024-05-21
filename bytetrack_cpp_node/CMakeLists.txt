@@ -21,8 +21,8 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_components REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
-find_package(bboxes_ex_msgs REQUIRED)
 find_package(bytetrack_cpp REQUIRED)
+find_package(vision_msgs REQUIRED)
 
 # add executable
 add_executable(bytetrack_cpp_node
@@ -33,7 +33,7 @@ ament_target_dependencies(bytetrack_cpp_node
   rclcpp_components
   std_msgs
   bytetrack_cpp
-  bboxes_ex_msgs
+  vision_msgs
 )
 target_include_directories(bytetrack_cpp_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -65,7 +65,7 @@ ament_target_dependencies(bytetrack_cpp_component
   rclcpp_components
   std_msgs
   bytetrack_cpp
-  bboxes_ex_msgs
+  vision_msgs
   )
 install(TARGETS bytetrack_cpp_component
   EXPORT export_${PROJECT_NAME}
